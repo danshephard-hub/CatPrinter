@@ -1,4 +1,4 @@
-const { ThermalPrinterClient, NodeBluetoothAdapter } = require('@clementvp/mxw01-thermal-printer');
+const { ThermalPrinterClient, NodeBluetoothAdapter } = require('mxw01-thermal-printer');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs').promises;
 
