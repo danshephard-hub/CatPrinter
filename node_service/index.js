@@ -6,7 +6,6 @@ class RPCServer {
         this.bridge = new PrinterBridge();
         this.rl = readline.createInterface({
             input: process.stdin,
-            output: process.stdout,
             terminal: false
         });
 
