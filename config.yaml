@@ -16,7 +16,7 @@ ingress: true
 ingress_port: 8099
 panel_icon: mdi:printer
 host_dbus: true
-host_network: false
+host_network: true
 apparmor: false
 devices:
   - /dev/bus/usb
