@@ -1,5 +1,5 @@
 name: MXW01 Thermal Printer
-version: "1.0.0"
+version: "1.0.1"
 slug: mxw01_printer
 description: "Control MXW01 Bluetooth thermal printer from Home Assistant"
 url: https://github.com/clementvp/mxw01-thermal-printer
