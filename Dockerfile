@@ -1,8 +1,8 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Upgrade base packages to fix version conflicts
-RUN apk upgrade --no-cache
+# Fix musl version conflict by explicitly upgrading musl first
+RUN apk upgrade --no-cache musl
 
 # Install system dependencies
 RUN apk add --no-cache \
