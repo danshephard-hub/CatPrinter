@@ -1,6 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+# Upgrade base packages to fix version conflicts
+RUN apk upgrade --no-cache
+
 # Install system dependencies
 RUN apk add --no-cache \
     python3 \
