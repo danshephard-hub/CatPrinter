@@ -13,16 +13,6 @@ export LOG_LEVEL=$(bashio::config 'log_level')
 # Noble environment variables
 export NOBLE_MULTI_ROLE=1
 export NOBLE_REPORT_ALL_HCI_EVENTS=1
-export DEBUG=noble*
-
-# Debug: Show environment
-bashio::log.info "Environment check..."
-bashio::log.info "USER: $(whoami)"
-bashio::log.info "Groups: $(groups)"
-bashio::log.info "Bluetooth devices:"
-ls -la /dev/bluetooth* 2>/dev/null || bashio::log.info "  No /dev/bluetooth*"
-ls -la /dev/tty* 2>/dev/null | grep -i blue || bashio::log.info "  No /dev/tty Bluetooth"
-ls -la /sys/class/bluetooth/ 2>/dev/null || bashio::log.info "  No /sys/class/bluetooth"
 
 # Log startup
 bashio::log.info "Starting MXW01 Printer Addon..."
