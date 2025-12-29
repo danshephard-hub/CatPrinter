@@ -1,3 +1,29 @@
+// Debug: Check if modules exist
+console.error('[Debug] Attempting to load mxw01-thermal-printer...');
+try {
+    const printerModule = require('mxw01-thermal-printer');
+    console.error('[Debug] mxw01-thermal-printer loaded successfully');
+    console.error('[Debug] Available exports:', Object.keys(printerModule));
+} catch (e) {
+    console.error('[Debug] Failed to load mxw01-thermal-printer:', e.message);
+}
+
+console.error('[Debug] Attempting to load canvas...');
+try {
+    require('canvas');
+    console.error('[Debug] canvas loaded successfully');
+} catch (e) {
+    console.error('[Debug] Failed to load canvas:', e.message);
+}
+
+console.error('[Debug] Attempting to load @stoprocent/noble directly...');
+try {
+    require('@stoprocent/noble');
+    console.error('[Debug] @stoprocent/noble loaded successfully');
+} catch (e) {
+    console.error('[Debug] Failed to load @stoprocent/noble:', e.message);
+}
+
 const { ThermalPrinterClient, NodeBluetoothAdapter } = require('mxw01-thermal-printer');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs').promises;
