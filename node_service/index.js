@@ -16,8 +16,9 @@ class RPCServer {
 
     setupHandlers() {
         this.rl.on('line', async (line) => {
+            let request;
             try {
-                const request = JSON.parse(line);
+                request = JSON.parse(line);
                 this.logMessage(`Received request: ${request.method}`);
 
                 const result = await this.handleRequest(request);

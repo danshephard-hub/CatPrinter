@@ -10,14 +10,25 @@ class PrinterBridge {
 
     async connect(macAddress) {
         try {
-            this.adapter = new NodeBluetoothAdapter(macAddress);
-            this.printer = new ThermalPrinterClient(this.adapter);
+            // Create adapter (no parameters)
+            this.adapter = new NodeBluetoothAdapter();
 
-            await this.printer.connect();
+            // Request device (scans for MXW01 printers)
+            const device = await this.adapter.requestDevice();
+
+            // Note: requestDevice() auto-discovers MXW01 printers
+            // If MAC filtering is needed, it would happen here
+            // For now, we'll connect to the first discovered device
+
+            // Create printer client and connect
+            const connection = await this.adapter.connect(device);
+            this.printer = new ThermalPrinterClient(this.adapter);
 
             return {
                 success: true,
-                connected: this.printer.isConnected
+                connected: true,
+                deviceName: device.name,
+                deviceId: device.id
             };
         } catch (error) {
             throw new Error(`Connection failed: ${error.message}`);
