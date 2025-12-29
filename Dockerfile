@@ -12,6 +12,7 @@ RUN apk add --no-cache --upgrade \
     bluez-deprecated \
     bluez-libs \
     dbus \
+    dbus-x11 \
     build-base \
     cairo-dev \
     jpeg-dev \

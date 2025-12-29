@@ -13,6 +13,16 @@ export LOG_LEVEL=$(bashio::config 'log_level')
 # Noble environment variables
 export NOBLE_MULTI_ROLE=1
 export NOBLE_REPORT_ALL_HCI_EVENTS=1
+export DEBUG=noble*
+
+# Debug: Show environment
+bashio::log.info "Environment check..."
+bashio::log.info "USER: $(whoami)"
+bashio::log.info "Groups: $(groups)"
+bashio::log.info "Bluetooth devices:"
+ls -la /dev/bluetooth* 2>/dev/null || bashio::log.info "  No /dev/bluetooth*"
+ls -la /dev/tty* 2>/dev/null | grep -i blue || bashio::log.info "  No /dev/tty Bluetooth"
+ls -la /sys/class/bluetooth/ 2>/dev/null || bashio::log.info "  No /sys/class/bluetooth"
 
 # Log startup
 bashio::log.info "Starting MXW01 Printer Addon..."
@@ -24,16 +34,38 @@ bashio::log.info "Dither Method: ${DITHER_METHOD}"
 # Configure D-Bus for Bluetooth
 bashio::log.info "Configuring D-Bus for Bluetooth..."
 
-# Check if host D-Bus socket is available (Home Assistant OS shares this)
-if [ -e /var/run/dbus/system_bus_socket ]; then
-    bashio::log.info "Using host D-Bus socket"
-    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
+# Debug: Check what's available
+bashio::log.info "Checking for D-Bus sockets..."
+ls -la /var/run/dbus/ 2>/dev/null || bashio::log.info "No /var/run/dbus directory"
+ls -la /run/dbus/ 2>/dev/null || bashio::log.info "No /run/dbus directory"
+ls -la /host/run/dbus/ 2>/dev/null || bashio::log.info "No /host/run/dbus directory"
+
+# Check multiple possible D-Bus socket locations
+DBUS_SOCKET=""
+if [ -S /var/run/dbus/system_bus_socket ]; then
+    DBUS_SOCKET="/var/run/dbus/system_bus_socket"
+elif [ -S /run/dbus/system_bus_socket ]; then
+    DBUS_SOCKET="/run/dbus/system_bus_socket"
+elif [ -S /host/run/dbus/system_bus_socket ]; then
+    DBUS_SOCKET="/host/run/dbus/system_bus_socket"
+fi
+
+if [ -n "$DBUS_SOCKET" ]; then
+    bashio::log.info "Found host D-Bus socket at: $DBUS_SOCKET"
+    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=$DBUS_SOCKET
 else
     # Start our own D-Bus if not available from host
-    bashio::log.info "Starting local D-Bus daemon..."
+    bashio::log.warning "No host D-Bus socket found, starting local daemon..."
     mkdir -p /var/run/dbus
     rm -f /var/run/dbus/pid
     dbus-daemon --system --fork || bashio::log.warning "D-Bus may already be running"
+    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
+fi
+
+# Verify D-Bus is accessible
+if command -v dbus-send >/dev/null 2>&1; then
+    bashio::log.info "Testing D-Bus connection..."
+    dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames 2>&1 | head -5 || bashio::log.warning "D-Bus test failed"
 fi
 
 # Only start bluetoothd if it's available and not already running
