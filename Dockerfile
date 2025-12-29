@@ -1,11 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Fix musl version conflict by explicitly upgrading musl first
-RUN apk upgrade --no-cache musl
-
-# Install system dependencies
-RUN apk add --no-cache \
+# Install system dependencies with musl upgrade to fix version conflict
+RUN apk add --no-cache --upgrade \
+    musl \
     python3 \
     py3-pip \
     nodejs \
