@@ -34,57 +34,26 @@ bashio::log.info "Dither Method: ${DITHER_METHOD}"
 # Configure D-Bus for Bluetooth
 bashio::log.info "Configuring D-Bus for Bluetooth..."
 
-# Debug: Check what's available
-bashio::log.info "Checking for D-Bus sockets..."
-ls -la /var/run/dbus/ 2>/dev/null || bashio::log.info "No /var/run/dbus directory"
-ls -la /run/dbus/ 2>/dev/null || bashio::log.info "No /run/dbus directory"
-ls -la /host/run/dbus/ 2>/dev/null || bashio::log.info "No /host/run/dbus directory"
+# With host_dbus: true, Home Assistant OS mounts D-Bus at /run/dbus
+if [ -S /run/dbus/system_bus_socket ]; then
+    bashio::log.info "Using host D-Bus at /run/dbus/system_bus_socket"
+    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 
-# Check multiple possible D-Bus socket locations
-DBUS_SOCKET=""
-if [ -S /var/run/dbus/system_bus_socket ]; then
-    DBUS_SOCKET="/var/run/dbus/system_bus_socket"
-elif [ -S /run/dbus/system_bus_socket ]; then
-    DBUS_SOCKET="/run/dbus/system_bus_socket"
-elif [ -S /host/run/dbus/system_bus_socket ]; then
-    DBUS_SOCKET="/host/run/dbus/system_bus_socket"
-fi
-
-if [ -n "$DBUS_SOCKET" ]; then
-    bashio::log.info "Found host D-Bus socket at: $DBUS_SOCKET"
-    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=$DBUS_SOCKET
-else
-    # Start our own D-Bus if not available from host
-    bashio::log.warning "No host D-Bus socket found, starting local daemon..."
-    mkdir -p /var/run/dbus
-    rm -f /var/run/dbus/pid
-    dbus-daemon --system --fork || bashio::log.warning "D-Bus may already be running"
-    export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
-fi
-
-# Verify D-Bus is accessible
-if command -v dbus-send >/dev/null 2>&1; then
+    # Test D-Bus connection
     bashio::log.info "Testing D-Bus connection..."
-    dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames 2>&1 | head -5 || bashio::log.warning "D-Bus test failed"
-fi
+    if dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames > /dev/null 2>&1; then
+        bashio::log.info "D-Bus connection successful"
 
-# Only start bluetoothd if it's available and not already running
-if command -v bluetoothd >/dev/null 2>&1; then
-    if ! pgrep -x bluetoothd >/dev/null; then
-        bashio::log.info "Starting bluetoothd..."
-        bluetoothd --experimental &
-        sleep 2
+        # List available Bluetooth adapters via D-Bus
+        bashio::log.info "Checking for Bluetooth adapters..."
+        dbus-send --system --print-reply --dest=org.bluez / org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>&1 | grep -i adapter || bashio::log.info "No Bluetooth adapters found via D-Bus"
     else
-        bashio::log.info "bluetoothd already running"
+        bashio::log.warning "D-Bus connection test failed"
     fi
 else
-    bashio::log.info "bluetoothd not available - using host Bluetooth stack"
-fi
-
-# Try to bring up Bluetooth adapter (may be managed by host)
-if command -v hciconfig >/dev/null 2>&1; then
-    bashio::log.info "Bringing up Bluetooth adapter..."
-    hciconfig hci0 up 2>/dev/null || bashio::log.warning "Could not bring up hci0 (may be managed by host)"
+    bashio::log.error "D-Bus socket not found at /run/dbus/system_bus_socket"
+    bashio::log.error "Make sure host_dbus: true is set in config.yaml"
+    exit 1
 fi
 
 # Start Python service
