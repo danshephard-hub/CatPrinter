@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MXW01 Thermal Printer Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MXW01 Thermal Printer</h1>
+            <p class="subtitle">Home Assistant Addon Control Panel</p>
+        </header>
+
+        <div class="status-section section">
+            <h2>Printer Status</h2>
+            <div id="status-display">
+                <div class="status-item">
+                    <span class="status-label">Connection:</span>
+                    <span id="connection-status" class="status-value">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Printing:</span>
+                    <span id="printing-status" class="status-value">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">State:</span>
+                    <span id="state-status" class="status-value">-</span>
+                </div>
+            </div>
+            <button onclick="refreshStatus()" class="btn btn-secondary">Refresh Status</button>
+        </div>
+
+        <div class="control-section section">
+            <h2>Connection Control</h2>
+            <div class="form-group">
+                <label for="mac-address">Printer MAC Address:</label>
+                <input
+                    type="text"
+                    id="mac-address"
+                    placeholder="AA:BB:CC:DD:EE:FF"
+                    value="{{ config.printer_mac }}"
+                >
+            </div>
+            <div class="button-group">
+                <button onclick="connect()" class="btn btn-primary">Connect</button>
+                <button onclick="disconnect()" class="btn btn-secondary">Disconnect</button>
+            </div>
+        </div>
+
+        <div class="print-section section">
+            <h2>Print Text</h2>
+            <div class="form-group">
+                <label for="print-text">Text to Print:</label>
+                <textarea
+                    id="print-text"
+                    rows="5"
+                    placeholder="Enter text to print..."
+                ></textarea>
+            </div>
+            <div class="form-group">
+                <label for="font-size">Font Size:</label>
+                <input
+                    type="number"
+                    id="font-size"
+                    value="24"
+                    min="12"
+                    max="48"
+                >
+            </div>
+            <div class="button-group">
+                <button onclick="printText()" class="btn btn-primary">Print Text</button>
+                <button onclick="printTest()" class="btn btn-secondary">Print Test Page</button>
+            </div>
+        </div>
+
+        <div class="image-section section">
+            <h2>Print Image</h2>
+            <div class="form-group">
+                <label for="image-path">Image Path or URL:</label>
+                <input
+                    type="text"
+                    id="image-path"
+                    placeholder="/config/www/image.jpg or https://..."
+                >
+            </div>
+            <button onclick="printImage()" class="btn btn-primary">Print Image</button>
+        </div>
+
+        <div class="settings-section section">
+            <h2>Printer Settings</h2>
+            <div class="form-group">
+                <label for="intensity">Print Intensity (0-255):</label>
+                <div class="slider-group">
+                    <input
+                        type="range"
+                        id="intensity"
+                        min="0"
+                        max="255"
+                        value="{{ config.print_intensity }}"
+                        oninput="document.getElementById('intensity-value').textContent = this.value"
+                    >
+                    <span id="intensity-value">{{ config.print_intensity }}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="dither-method">Dither Method:</label>
+                <select id="dither-method">
+                    <option value="floyd-steinberg" {% if config.dither_method == 'floyd-steinberg' %}selected{% endif %}>Floyd-Steinberg</option>
+                    <option value="bayer" {% if config.dither_method == 'bayer' %}selected{% endif %}>Bayer</option>
+                    <option value="atkinson" {% if config.dither_method == 'atkinson' %}selected{% endif %}>Atkinson</option>
+                    <option value="none" {% if config.dither_method == 'none' %}selected{% endif %}>None</option>
+                </select>
+            </div>
+            <button onclick="updateSettings()" class="btn btn-primary">Apply Settings</button>
+        </div>
+
+        <div id="message-area" class="message-area"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
