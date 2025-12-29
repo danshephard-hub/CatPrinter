@@ -9,6 +9,7 @@ RUN apk add --no-cache --upgrade \
     nodejs \
     npm \
     bluez \
+    bluez-deprecated \
     bluez-libs \
     dbus \
     build-base \
@@ -17,7 +18,9 @@ RUN apk add --no-cache --upgrade \
     pango-dev \
     giflib-dev \
     pixman-dev \
-    linux-headers
+    linux-headers && \
+    echo "=== Checking for bluetoothd ===" && \
+    which bluetoothd || echo "bluetoothd not found in PATH"
 
 # Create working directory
 WORKDIR /app
