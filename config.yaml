@@ -17,6 +17,8 @@ ingress_port: 8099
 panel_icon: mdi:printer
 host_dbus: true
 host_network: false
+devices:
+  - /dev/bus/usb
 privileged:
   - NET_ADMIN
   - NET_RAW

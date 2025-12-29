@@ -18,10 +18,13 @@ try {
 
 console.error('[Debug] Attempting to load @stoprocent/noble directly...');
 try {
-    require('@stoprocent/noble');
+    const noble = require('@stoprocent/noble');
     console.error('[Debug] @stoprocent/noble loaded successfully');
+    console.error('[Debug] Noble state:', noble.state);
+    console.error('[Debug] Noble address:', noble.address);
 } catch (e) {
     console.error('[Debug] Failed to load @stoprocent/noble:', e.message);
+    console.error('[Debug] Full error:', e.stack);
 }
 
 const { ThermalPrinterClient, NodeBluetoothAdapter } = require('mxw01-thermal-printer');
