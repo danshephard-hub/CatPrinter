@@ -34,9 +34,19 @@ if [ -S /run/dbus/system_bus_socket ]; then
     if dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames > /dev/null 2>&1; then
         bashio::log.info "D-Bus connection successful"
 
-        # List available Bluetooth adapters via D-Bus
-        bashio::log.info "Checking for Bluetooth adapters..."
-        dbus-send --system --print-reply --dest=org.bluez / org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>&1 | grep -i adapter || bashio::log.info "No Bluetooth adapters found via D-Bus"
+        # Check if org.bluez service is available
+        bashio::log.info "Checking for BlueZ service..."
+        if dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames 2>&1 | grep -q "org.bluez"; then
+            bashio::log.info "BlueZ service found on D-Bus"
+
+            # List available Bluetooth adapters via D-Bus
+            bashio::log.info "Checking for Bluetooth adapters..."
+            dbus-send --system --print-reply --dest=org.bluez / org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>&1 | grep -i adapter || bashio::log.info "No Bluetooth adapters found via D-Bus"
+        else
+            bashio::log.warning "BlueZ service (org.bluez) not found on D-Bus"
+            bashio::log.warning "Bluetooth may not be enabled on the host system"
+            bashio::log.warning "Check Home Assistant Settings -> System -> Hardware"
+        fi
     else
         bashio::log.warning "D-Bus connection test failed"
     fi
