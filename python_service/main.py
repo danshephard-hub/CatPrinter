@@ -9,11 +9,11 @@ import signal
 import sys
 import time
 from config import load_config, get_log_level
-from bridge import PrinterBridge
+from printer_client import PrinterClient
 from web_ui import create_app
 
 # Global references for cleanup
-bridge = None
+printer_client = None
 app = None
 
 
@@ -34,17 +34,17 @@ def signal_handler(signum, frame):
     """Handle shutdown signals"""
     logger.info("Received shutdown signal, cleaning up...")
 
-    if bridge:
+    if printer_client:
         try:
-            bridge.stop()
+            printer_client.stop()
         except Exception as e:
-            logger.error(f"Error stopping bridge: {e}")
+            logger.error(f"Error stopping printer client: {e}")
 
     sys.exit(0)
 
 
 def main():
-    global bridge, app, logger
+    global printer_client, app, logger
 
     # Load configuration
     config = load_config()
@@ -59,20 +59,23 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-        # Create and start printer bridge
-        logger.info("Initializing printer bridge...")
-        bridge = PrinterBridge()
-        bridge.start()
+        # Create printer client
+        logger.info("Initializing Bluetooth printer client...")
+        printer_client = PrinterClient()
 
-        # Wait for bridge to initialize
-        time.sleep(2)
+        # Wait for event loop to initialize
+        time.sleep(1)
 
         # Auto-connect if configured
-        if config.get('auto_connect') and config.get('printer_mac'):
-            logger.info(f"Auto-connecting to printer: {config['printer_mac']}")
+        if config.get('auto_connect'):
+            mac = config.get('printer_mac') or None
+            if mac:
+                logger.info(f"Auto-connecting to printer: {mac}")
+            else:
+                logger.info("Auto-connecting to any available MXW01 printer...")
             try:
-                result = bridge.connect(config['printer_mac'])
-                logger.info(f"Auto-connect result: {result}")
+                result = printer_client.connect(mac)
+                logger.info(f"Auto-connect successful: {result}")
             except Exception as e:
                 logger.error(f"Auto-connect failed: {e}")
                 logger.info("Continuing without connection - you can connect manually via web UI")
@@ -80,15 +83,15 @@ def main():
         # Set initial printer settings
         try:
             if config.get('print_intensity'):
-                bridge.set_intensity(config['print_intensity'])
+                printer_client.set_intensity(config['print_intensity'])
             if config.get('dither_method'):
-                bridge.set_dither_method(config['dither_method'])
+                printer_client.set_dither_method(config['dither_method'])
         except Exception as e:
             logger.warning(f"Failed to set initial printer settings: {e}")
 
         # Create Flask app
         logger.info("Starting web server...")
-        app = create_app(bridge, config)
+        app = create_app(printer_client, config)
 
         # Start Flask server
         logger.info("Web UI available on port 8099")
@@ -103,8 +106,8 @@ def main():
 
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
-        if bridge:
-            bridge.stop()
+        if printer_client:
+            printer_client.stop()
         sys.exit(1)
 
 
