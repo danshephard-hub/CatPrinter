@@ -68,7 +68,14 @@ class MXW01Printer:
             if mac_address:
                 logger.info(f"Connecting to printer at {mac_address}...")
                 # Scan with filter for specific MAC
-                devices = await BleakScanner.discover(timeout=30.0)
+                logger.info("Scanning for Bluetooth devices (60s timeout)...")
+                devices = await BleakScanner.discover(timeout=60.0)
+
+                # Log all discovered devices for debugging
+                logger.info(f"Found {len(devices)} Bluetooth device(s):")
+                for d in devices:
+                    logger.info(f"  - {d.name or 'Unknown'} ({d.address}) RSSI: {d.rssi}")
+
                 self.device = next(
                     (d for d in devices if d.address.lower() == mac_address.lower()),
                     None
@@ -77,7 +84,7 @@ class MXW01Printer:
                     raise Exception(f"Printer with MAC {mac_address} not found")
             else:
                 logger.info("Scanning for any MXW01 printer...")
-                printers = await self.scan_for_printers(timeout=30.0)
+                printers = await self.scan_for_printers(timeout=60.0)
                 if not printers:
                     raise Exception("No MXW01 printers found")
                 self.device = printers[0]
