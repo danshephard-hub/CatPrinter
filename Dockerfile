@@ -1,8 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Install system dependencies
+# Install system dependencies with musl upgrade to fix version conflict
 RUN apk add --no-cache --upgrade \
+    musl \
     python3 \
     py3-pip \
     build-base \
